@@ -8,8 +8,7 @@ public class main {
 
         MySQLConnect myCon = new MySQLConnect();
         Connection con = myCon.connect();
-        myCon.getFields(usr);
-        //myCon.insert(usr);
+        myCon.insert(usr);
         myCon.disconect(con);
 
     }

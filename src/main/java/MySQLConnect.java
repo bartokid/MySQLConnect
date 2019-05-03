@@ -1,4 +1,5 @@
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.*;
@@ -38,9 +39,29 @@ public class MySQLConnect {
 
     public void insert(Object object ){
         try {
-            Statement statement = connection.createStatement();
-            ResultSet rs= statement.executeQuery("INSERT INTO " + object.getClass().getName() + "s VALUES ("+
-                    getFields(object)+")");
+            // INSERT INTO Usuarios (id, name, ) VALUES (?,?,?)
+            // INSERT INTO Usuarios (id, name, ) VALUES ("PAu", "dksk2, "sds!")
+
+            String query = "INSERT INTO " + object.getClass().getName().toLowerCase() + "s ("+getFields(object)+
+                    ") VALUES ("+ getValues(object)+");";
+            System.out.println(query);
+            PreparedStatement statement = connection.prepareStatement(query);
+
+
+            String sField; // ·"nombre"
+
+            "get"+sField.substring(0,1).toUpperCase()+sField.substring(1);
+
+
+
+            Method m = object.getClass().getDeclaredMethod("getNombre", null);
+
+            String res = (String)m.invoke(object);
+
+            statement.setString(i, res);
+
+
+            ResultSet rs= statement.executeQuery(query);
             String fields = getFields(object);
         } catch (SQLException e) {
             e.printStackTrace();
@@ -57,17 +78,24 @@ public class MySQLConnect {
         return state;
     }
 
-    public String getFields(Object entity) {
-        String fields=null;
-        Field[] l =entity.getClass().getFields();
+    private String getFields(Object entity) {
 
-        for (Field f : l) {
-            fields = fields + f.getName() +",";
-            System.out.println(f.getName());
-            System.out.println("hola");
+        StringBuffer sb= new StringBuffer();
+        Field[] l =entity.getClass().getDeclaredFields();
+
+        sb.append(l[0].getName());
+        for(int i =1 ; i<l.length;i++){
+            sb.append("," + l[i].getName());
         }
 
-        return fields;
+        return sb.toString();
     }
-
+    private String getValues(Object entity){
+        StringBuffer sb= new StringBuffer();
+            sb.append("?");
+        for(int i=1; i<entity.getClass().getDeclaredFields().length;i++){
+            sb.append(",?");
+        }
+        return sb.toString();
+    }
 }
