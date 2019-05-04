@@ -1,4 +1,5 @@
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -39,30 +40,21 @@ public class MySQLConnect {
 
     public void insert(Object object ){
         try {
-            // INSERT INTO Usuarios (id, name, ) VALUES (?,?,?)
-            // INSERT INTO Usuarios (id, name, ) VALUES ("PAu", "dksk2, "sds!")
+
 
             String query = "INSERT INTO " + object.getClass().getName().toLowerCase() + "s ("+getFields(object)+
-                    ") VALUES ("+ getValues(object)+");";
+                    ") VALUES ("+ getQMarkers(object)+");";
             System.out.println(query);
             PreparedStatement statement = connection.prepareStatement(query);
-
-
-            String sField; // ·"nombre"
-
-            "get"+sField.substring(0,1).toUpperCase()+sField.substring(1);
-
-
-
-            Method m = object.getClass().getDeclaredMethod("getNombre", null);
-
-            String res = (String)m.invoke(object);
-
-            statement.setString(i, res);
-
+            String[] valores =getValue(object,statement);
+            int i =0;
+            while(i<valores.length){
+                statement.setString(i,valores[i]);
+            }
 
             ResultSet rs= statement.executeQuery(query);
-            String fields = getFields(object);
+
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -90,12 +82,41 @@ public class MySQLConnect {
 
         return sb.toString();
     }
-    private String getValues(Object entity){
+    private String getQMarkers(Object entity){
         StringBuffer sb= new StringBuffer();
             sb.append("?");
         for(int i=1; i<entity.getClass().getDeclaredFields().length;i++){
             sb.append(",?");
         }
         return sb.toString();
+    }
+    private String[] getValue(Object entity, PreparedStatement state){
+        int i=0;
+        String sField;
+        Field[] l =entity.getClass().getDeclaredFields();
+        String[] valores=null;
+        try {
+        while(i<l.length){
+            sField= l[i].getName();
+            Method m= entity.getClass().getDeclaredMethod(
+                        "get"+sField.substring(0,1).toUpperCase()+sField.substring(1),null);
+                        //añadir paràmetros donde el null ya que podria ser un problema para los setters.
+            String res = (String)m.invoke(entity);
+            System.out.println(sField);
+            System.out.println(res);
+            valores[i] = res;
+            //state.setString(i,res);
+            i++;
+        }
+
+        } catch (NoSuchMethodException e) {
+            e.printStackTrace();
+        } catch (IllegalAccessException e) {
+            e.printStackTrace();
+        } catch (InvocationTargetException e) {
+            e.printStackTrace();
+        }
+
+        return valores;
     }
 }
